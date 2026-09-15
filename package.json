@@ -28,7 +28,8 @@
     "test:management": "tsx --env-file=.env.local tests/protocol-management.e2e.ts",
     "test:agent-policy": "tsx --env-file=.env.local tests/agent-policy.e2e.ts",
     "test:verifier-recovery": "tsx --env-file=.env.local tests/verifier-recovery.integration.ts",
-    "deploy:devnet": "bash scripts/deploy-devnet.sh"
+    "deploy:devnet": "bash scripts/deploy-devnet.sh",
+    "verify:devnet": "tsx --env-file=.env.local scripts/verify-public-cluster.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",

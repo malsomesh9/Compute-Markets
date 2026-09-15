@@ -6,6 +6,8 @@ An InsForge-backed compute exchange with an Anchor Solana escrow program, Next.j
 
 Live demo: https://dyr25fzr.insforge.site. API readiness: https://vericompute-api-d538c2c8-0e47-44a3-bc01-d07ab8a2e8f4.fly.dev/ready. Program: `HsjKrSHNqXgqkDmyp1PAhhFAa16GHfeRNZ9s6Zuqpfyd` on Solana devnet. The market only shows signed, indexed supply; it can be empty when no independent provider is online.
 
+The hosted program currently activates VERIFY_0 and VERIFY_1. The source and control-plane paths for VERIFY_2–5 are built, but the stack-safe program upgrade is pending additional devnet SOL for its temporary 3.80 SOL loader buffer. The API advertises this ceiling and rejects unsupported funded jobs instead of returning transactions that will fail on-chain.
+
 ## Run
 
 ```sh
@@ -52,6 +54,7 @@ npm run test:management
 npm run test:agent-policy
 npm run test:verifier-recovery
 npm run license:audit
+npm run verify:devnet # simulates every policy code without changing chain state
 npm run deploy:devnet # public-cluster preflight, deploy and initialization
 ```
 

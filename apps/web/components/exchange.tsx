@@ -55,6 +55,19 @@ type Offer = {
   expiresAt: number;
   estimatedStartSeconds: number;
 };
+type VerificationPolicy = "BASIC" | "STANDARD" | "CHALLENGE" | "REDUNDANT";
+const verificationPolicies: VerificationPolicy[] = [
+  "BASIC",
+  "STANDARD",
+  "CHALLENGE",
+  "REDUNDANT",
+];
+const assuranceByPolicy: Record<VerificationPolicy, string> = {
+  BASIC: "VERIFY_0",
+  STANDARD: "VERIFY_1",
+  CHALLENGE: "VERIFY_2",
+  REDUNDANT: "VERIFY_3",
+};
 const short = (s: string) => (s ? `${s.slice(0, 5)}…${s.slice(-4)}` : "—");
 const dollars = (n: number) =>
   n.toLocaleString("en-US", {
@@ -569,7 +582,12 @@ export function Exchange() {
             </section>
           </>
         ) : path === "/jobs/new" ? (
-          <NewJob notify={setNotice} signedIn={!!user} signIn={connect} />
+          <NewJob
+            notify={setNotice}
+            signedIn={!!user}
+            signIn={connect}
+            maxVerificationPolicy={Number(stats?.maxVerificationPolicy ?? 1)}
+          />
         ) : path === "/jobs" ? (
           <Jobs connected={!!wallet} connect={connect} />
         ) : path === "/agents" ? (
@@ -801,10 +819,12 @@ function NewJob({
   notify,
   signedIn,
   signIn,
+  maxVerificationPolicy,
 }: {
   notify: (s: string) => void;
   signedIn: boolean;
   signIn: () => void;
+  maxVerificationPolicy: number;
 }) {
   const router = useRouter(),
     params = useSearchParams();
@@ -816,7 +836,9 @@ function NewJob({
     [vram, setVram] = useState("24"),
     [duration, setDuration] = useState("300"),
     [budget, setBudget] = useState("0.10"),
-    [policy, setPolicy] = useState("STANDARD"),
+    [policy, setPolicy] = useState<VerificationPolicy>("STANDARD"),
+    [replicas, setReplicas] = useState("2"),
+    [requiredMatches, setRequiredMatches] = useState("2"),
     [quotes, setQuotes] = useState<any[] | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -833,31 +855,37 @@ function NewJob({
         })
         .catch((e) => setError(e.message));
   }, [params]);
-  const spec = () => ({
-    version: "1",
-    runtime: "oci",
-    image: {
-      repository,
-      digest: digest.startsWith("sha256:") ? digest : `sha256:${digest}`,
-    },
-    command: command.trim().split(/\s+/),
-    resources: {
-      gpu: {
-        count: gpu === "CPU only" ? 0 : 1,
-        minimumVramMb: gpu === "CPU only" ? 0 : Number(vram) * 1024,
-        allowedModels: ["Any NVIDIA GPU", "CPU only"].includes(gpu)
-          ? []
-          : [gpu],
+  const spec = () => {
+    const value: Record<string, unknown> = {
+      version: "1",
+      runtime: "oci",
+      image: {
+        repository,
+        digest: digest.startsWith("sha256:") ? digest : `sha256:${digest}`,
       },
-      cpuCores: gpu === "CPU only" ? 1 : 4,
-      ramMb: gpu === "CPU only" ? 256 : 16384,
-      storageMb: 1024,
-    },
-    execution: { timeoutSeconds: Number(duration), maxStartDelaySeconds: 60 },
-    network: { mode: "deny-by-default", allow: [] },
-    verification: { policy },
-    inputs: [],
-  });
+      command: command.trim().split(/\s+/),
+      resources: {
+        gpu: {
+          count: gpu === "CPU only" ? 0 : 1,
+          minimumVramMb: gpu === "CPU only" ? 0 : Number(vram) * 1024,
+          allowedModels: ["Any NVIDIA GPU", "CPU only"].includes(gpu)
+            ? []
+            : [gpu],
+        },
+        cpuCores: gpu === "CPU only" ? 1 : 4,
+        ramMb: gpu === "CPU only" ? 256 : 16384,
+        storageMb: 1024,
+      },
+      execution: {
+        timeoutSeconds: Number(duration),
+        maxStartDelaySeconds: 60,
+      },
+      network: { mode: "deny-by-default", allow: [] },
+      verification: { policy },
+      inputs: [],
+    };
+    return value;
+  };
   async function execute(action: "quote" | "save" | "submit") {
     setError("");
     if (action !== "quote" && !signedIn) {
@@ -877,15 +905,32 @@ function NewJob({
           signIn();
           return;
         }
-        const built = await api("/v1/jobs", {
-          spec: spec(),
-          maxSpendBaseUnits: String(Math.round(Number(budget) * 1e6)),
-        });
-        await signTransaction(built);
-        router.push(`/jobs/${built.jobId}`);
-        notify(
-          `Job funded on Solana · ${short(built.jobId)}. Providers can now bid.`,
-        );
+        if (policy === "REDUNDANT") {
+          const built = await api("/v1/jobs/redundant", {
+            spec: spec(),
+            maxSpendPerReplicaBaseUnits: String(
+              Math.round(Number(budget) * 1e6),
+            ),
+            replicas: Number(replicas),
+            requiredMatches: Number(requiredMatches),
+          });
+          for (const transaction of built.transactions)
+            await signTransaction(transaction);
+          router.push(`/jobs/${built.jobIds[0]}`);
+          notify(
+            `Redundant job funded across ${built.jobIds.length} independent replicas · ${short(built.groupId)}.`,
+          );
+        } else {
+          const built = await api("/v1/jobs", {
+            spec: spec(),
+            maxSpendBaseUnits: String(Math.round(Number(budget) * 1e6)),
+          });
+          await signTransaction(built);
+          router.push(`/jobs/${built.jobId}`);
+          notify(
+            `Job funded on Solana · ${short(built.jobId)}. Providers can now bid.`,
+          );
+        }
       } else {
         const r = await api("/v1/specs", { name, spec: spec() });
         notify(
@@ -1006,10 +1051,45 @@ function NewJob({
               <Select
                 label="Verification policy"
                 value={policy}
-                onChange={setPolicy}
-                options={["STANDARD", "BASIC"]}
+                onChange={(value) => setPolicy(value as VerificationPolicy)}
+                options={verificationPolicies.slice(
+                  0,
+                  Math.min(maxVerificationPolicy, 3) + 1,
+                )}
               />
             </label>
+            {policy === "REDUNDANT" && (
+              <div className="form-pair">
+                <label>
+                  Independent replicas
+                  <Select
+                    label="Independent replicas"
+                    value={replicas}
+                    onChange={(value) => {
+                      setReplicas(value);
+                      if (Number(requiredMatches) > Number(value))
+                        setRequiredMatches(value);
+                    }}
+                    options={["2", "3"]}
+                  />
+                </label>
+                <label>
+                  Required matching results
+                  <Select
+                    label="Required matching results"
+                    value={requiredMatches}
+                    onChange={setRequiredMatches}
+                    options={replicas === "2" ? ["2"] : ["2", "3"]}
+                  />
+                </label>
+              </div>
+            )}
+            <small>
+              This cluster activates VERIFY_0 through VERIFY_
+              {Math.min(maxVerificationPolicy, 3)}. TEE and proof adapters
+              remain fail-closed until qualified hardware and a production
+              circuit are configured.
+            </small>
             <div className="inline-note">
               <ShieldCheck size={16} /> Network access is denied. Containers run
               without root privileges.
@@ -1045,7 +1125,10 @@ function NewJob({
           <div className="summary-card">
             <div className="eyebrow">YOUR COMPUTE BUDGET</div>
             <strong>
-              {dollars(Number(budget))}
+              {dollars(
+                Number(budget) *
+                  (policy === "REDUNDANT" ? Number(replicas) : 1),
+              )}
               <span>USDC</span>
             </strong>
             <p>
@@ -1059,8 +1142,16 @@ function NewJob({
             </div>
             <div>
               <span>Assurance</span>
-              <b>{policy === "STANDARD" ? "VERIFY_1" : "VERIFY_0"}</b>
+              <b>{assuranceByPolicy[policy]}</b>
             </div>
+            {policy === "REDUNDANT" && (
+              <div>
+                <span>Quorum</span>
+                <b>
+                  {requiredMatches} of {replicas}
+                </b>
+              </div>
+            )}
             <div>
               <span>Network access</span>
               <b>Denied</b>
@@ -1630,7 +1721,10 @@ function Docs() {
             BASIC establishes a signed worker claim. STANDARD also checks
             assignment, image, inputs, outputs, hardware commitments, and
             timing. Neither proves computation or provides confidentiality.
-            Challenge, redundancy, TEE, and proof policies are not enabled.
+            CHALLENGE adds a hidden signed verifier challenge. REDUNDANT
+            requires matching results from independent providers. TEE and
+            Groth16 adapters are present but remain fail-closed until qualified
+            provider and verifier infrastructure is configured.
           </p>
           <h2 id="settlement">Escrow belongs to the Solana program</h2>
           <p>

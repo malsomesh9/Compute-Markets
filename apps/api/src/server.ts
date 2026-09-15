@@ -74,6 +74,23 @@ const agentPolicyBody = z.strictObject({
 });
 export async function createServer() {
   const publicReadOnly = process.env.PUBLIC_READ_ONLY === "true";
+  const maxOnchainPolicy = z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(5)
+    .parse(process.env.MAX_ONCHAIN_POLICY ?? "5");
+  function requireSupportedPolicy(
+    policy: (typeof verificationPolicies)[number],
+  ) {
+    if (policyCode(policy) > maxOnchainPolicy)
+      throw Object.assign(
+        new Error(
+          `${policy} is built but is not active on the configured Solana program`,
+        ),
+        { statusCode: 503 },
+      );
+  }
   const app = Fastify({
     logger: { redact: ["req.headers.authorization", "req.headers.cookie"] },
     bodyLimit: 65536,
@@ -358,6 +375,7 @@ export async function createServer() {
         genesisHash,
         programId: c.program.programId.toBase58(),
         indexer: process.env.RUN_INDEXER === "true" ? "embedded" : "external",
+        maxVerificationPolicy: maxOnchainPolicy,
       };
     } catch (error) {
       return reply.code(503).send({
@@ -442,6 +460,7 @@ export async function createServer() {
       mode: publicReadOnly ? "read-only-preview" : "live",
       settlementAsset: publicReadOnly ? "TEST USDC" : "USDC",
       programReady: !publicReadOnly,
+      maxVerificationPolicy: maxOnchainPolicy,
     };
   });
   app.get("/v1/prices", async () => {
@@ -537,6 +556,7 @@ export async function createServer() {
     const ownerAddress = await wallet(req);
     const { client, user } = await identity(req);
     const body = agentPolicyBody.parse(req.body);
+    requireSupportedPolicy(body.requiredVerification);
     const now = Math.floor(Date.now() / 1000);
     if (body.expiresAt <= now || body.expiresAt > now + 365 * 86_400)
       throw Object.assign(new Error("Policy expiry must be within one year"), {
@@ -605,6 +625,7 @@ export async function createServer() {
       const ownerAddress = await wallet(req);
       const { client, user } = await identity(req);
       const body = agentPolicyBody.parse(req.body);
+      requireSupportedPolicy(body.requiredVerification);
       if (body.agent !== req.params.agent)
         throw Object.assign(new Error("Agent path and body must match"), {
           statusCode: 400,
@@ -694,6 +715,7 @@ export async function createServer() {
         proof: z.array(hash32).max(16),
       })
       .parse(req.body);
+    requireSupportedPolicy(body.spec.verification.policy);
     const specHash = commitment(body.spec);
     const c = chain();
     const owner = new PublicKey(ownerAddress);
@@ -837,6 +859,7 @@ export async function createServer() {
         maxSpendBaseUnits: z.string().regex(/^[1-9][0-9]{0,12}$/),
       })
       .parse(req.body);
+    requireSupportedPolicy(body.spec.verification.policy);
     const { client, user } = await identity(req);
     await checked(
       client.database.from("job_specs").upsert(
@@ -909,6 +932,7 @@ export async function createServer() {
         requiredMatches: z.number().int().min(2).max(3),
       })
       .parse(req.body);
+    requireSupportedPolicy(body.spec.verification.policy);
     if (
       body.spec.verification.policy !== "REDUNDANT" ||
       body.requiredMatches > body.replicas

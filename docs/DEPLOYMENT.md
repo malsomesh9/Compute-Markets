@@ -6,6 +6,8 @@ The live devnet application is deployed at https://dyr25fzr.insforge.site. Its F
 
 The service is configured with `SOLANA_NETWORK=devnet`, `RUN_INDEXER=true`, and `PUBLIC_READ_ONLY=false`. `/health` reports process liveness and `/ready` validates the devnet genesis hash and executable program account. The deployed protocol configuration uses official devnet USDC (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`), a 2% fee, and a one-hour dispute period. Empty inventory means that no independent provider currently has a fresh signed heartbeat.
 
+Set `MAX_ONCHAIN_POLICY` to the highest policy code accepted by the deployed binary. The API returns it from `/ready` and `/v1/network/stats` and refuses to construct funded jobs above that ceiling. The current public program accepts 0–1; run `npm run verify:devnet` after each upgrade before raising the value.
+
 ## Public-chain promotion
 
 The program artifact is `target/deploy/compute_market.so` and its program ID is `HsjKrSHNqXgqkDmyp1PAhhFAa16GHfeRNZ9s6Zuqpfyd`. `npm run deploy:devnet` validates that the binary, IDL and program keypair match, checks the deployer's balance, deploys with an exact maximum length, verifies the configured six-decimal settlement mint, initializes protocol configuration and creates the treasury token account.

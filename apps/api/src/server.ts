@@ -36,6 +36,7 @@ import {
   policyCode,
   verificationPolicies,
 } from "../../../packages/verification/policies.ts";
+import { releaseReadiness } from "../../../packages/release-readiness/index.ts";
 import {
   challengeResponseSchema,
   issueChallenge,
@@ -358,6 +359,9 @@ export async function createServer() {
     settlement: "Solana only",
     requestTime: new Date().toISOString(),
   }));
+  app.get("/v1/release/readiness", async () =>
+    releaseReadiness(process.env, maxOnchainPolicy),
+  );
   app.get("/ready", async (_req, reply) => {
     try {
       const c = chain();

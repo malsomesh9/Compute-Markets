@@ -33,6 +33,7 @@ import {
   vllmDockerArgs,
   vllmInternalEndpoint,
 } from "../executors/vllm/index.ts";
+import { releaseReadiness } from "../packages/release-readiness/index.ts";
 
 const id = "11111111111111111111111111111111";
 const digest = "sha256:" + "a".repeat(64);
@@ -60,6 +61,28 @@ test("verification policy codes are stable and monotonic", () => {
     assert.equal(assuranceFor(policy), `VERIFY_${code}`);
   });
   assert.throws(() => policyFromCode(6));
+});
+
+test("release readiness cannot claim V1-V3 before every external gate passes", () => {
+  const pending = releaseReadiness({}, 1);
+  assert.equal(pending.softwareMvpReady, true);
+  assert.equal(pending.fullV1V3Ready, false);
+  assert.equal(pending.completedGates, 1);
+  assert.equal(pending.readinessPercent, 13);
+
+  const qualified = releaseReadiness(
+    {
+      RELEASE_GPU_QUALIFIED: "true",
+      RELEASE_TEE_QUALIFIED: "true",
+      RELEASE_PROOF_QUALIFIED: "true",
+      RELEASE_PERMISSIONLESS_VERIFIERS: "true",
+      RELEASE_OPERATIONS_QUALIFIED: "true",
+      RELEASE_AUDITED: "true",
+    },
+    5,
+  );
+  assert.equal(qualified.fullV1V3Ready, true);
+  assert.equal(qualified.readinessPercent, 100);
 });
 
 test("advanced job specifications require matching execution evidence", () => {

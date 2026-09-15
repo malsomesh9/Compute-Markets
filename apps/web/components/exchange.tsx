@@ -56,6 +56,15 @@ type Offer = {
   estimatedStartSeconds: number;
 };
 type VerificationPolicy = "BASIC" | "STANDARD" | "CHALLENGE" | "REDUNDANT";
+type ReleaseReadiness = {
+  release: string;
+  softwareMvpReady: boolean;
+  fullV1V3Ready: boolean;
+  completedGates: number;
+  totalGates: number;
+  readinessPercent: number;
+  gates: Array<{ id: string; label: string; ready: boolean; detail: string }>;
+};
 const verificationPolicies: VerificationPolicy[] = [
   "BASIC",
   "STANDARD",
@@ -88,6 +97,7 @@ export function Exchange() {
     router = useRouter();
   const [offers, setOffers] = useState<Offer[]>([]),
     [stats, setStats] = useState<any>(null),
+    [readiness, setReadiness] = useState<ReleaseReadiness | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [query, setQuery] = useState(""),
@@ -107,13 +117,15 @@ export function Exchange() {
     setLoading(true);
     setError("");
     try {
-      const [o, s] = await Promise.all([
+      const [o, s, r] = await Promise.all([
         api("/v1/offers"),
         api("/v1/network/stats"),
+        api("/v1/release/readiness"),
       ]);
       setOffers(o.offers);
       setNextOfferCursor(o.nextCursor ?? null);
       setStats(s);
+      setReadiness(r);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -611,7 +623,7 @@ export function Exchange() {
         ) : path === "/network" ||
           path === "/prices" ||
           path === "/explorer" ? (
-          <Network stats={stats} offers={offers} />
+          <Network stats={stats} offers={offers} readiness={readiness} />
         ) : (
           <Docs />
         )}
@@ -1624,7 +1636,15 @@ function Providers({ offers, stats }: { offers: Offer[]; stats: any }) {
     </>
   );
 }
-function Network({ stats, offers }: { stats: any; offers: Offer[] }) {
+function Network({
+  stats,
+  offers,
+  readiness,
+}: {
+  stats: any;
+  offers: Offer[];
+  readiness: ReleaseReadiness | null;
+}) {
   return (
     <>
       <PageHeading
@@ -1690,6 +1710,40 @@ function Network({ stats, offers }: { stats: any; offers: Offer[] }) {
           {stats?.network ?? "development network"}
         </p>
       </div>
+      {readiness && (
+        <section
+          className="panel release-readiness"
+          aria-labelledby="release-readiness-title"
+        >
+          <div className="release-readiness-heading">
+            <div>
+              <span className="eyebrow">PUBLIC RELEASE GATES</span>
+              <h2 id="release-readiness-title">Qualification is explicit.</h2>
+            </div>
+            <strong>{readiness.readinessPercent}%</strong>
+          </div>
+          <p>
+            {readiness.completedGates} of {readiness.totalGates} production
+            gates are independently verifiable on this deployment. The software
+            MVP is
+            {readiness.softwareMvpReady ? " operational" : " not operational"}.
+          </p>
+          <div className="release-gates">
+            {readiness.gates.map((gate) => (
+              <div className="release-gate" key={gate.id}>
+                {gate.ready ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+                <div>
+                  <b>{gate.label}</b>
+                  <span>{gate.detail}</span>
+                </div>
+                <em className={gate.ready ? "ready" : "pending"}>
+                  {gate.ready ? "READY" : "PENDING"}
+                </em>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }

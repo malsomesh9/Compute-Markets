@@ -1,0 +1,38 @@
+{
+  "network": "localnet",
+  "execution": "explicit development mock",
+  "program": "HsjKrSHNqXgqkDmyp1PAhhFAa16GHfeRNZ9s6Zuqpfyd",
+  "job": "CzYGVSLhG2T9SrDDj6y1xo2j5VRSCWsb1SFgMzuQDEh6",
+  "mint": "EWybiiUhW5dXWRSuENZpwy63ijmcVuJJCbmYqfTGH2Qs",
+  "settlementTx": "2KTjz5gZq3k9zQj3wqGk4iBpKUw7Bw6f4AmVn5ztmGdTPx8Ac1mteSSMf7RT6K3EwxpbnKtRCrB7i9p8A6oBSFcY",
+  "verificationTx": "PbAfFEBdSR6yU6hfnvkQJBEWS1koBi75c61GbcCsxiJCRPTtrf892tFrED4armdG9tJNX7AJmrbuXpcEPvRyABW",
+  "accounting": {
+    "state": "COMPLETED",
+    "settled": true,
+    "deposit": 100000,
+    "provider_paid": 34300,
+    "fee_paid": 700,
+    "refunded": 65000
+  },
+  "verifiedAt": "2026-09-10T16:52:33.129Z",
+  "providers": [
+    {
+      "provider": "5HoriHZaCAPZDmsKMzzLAnRowmkRSnBg3ubSUPE7hGNc",
+      "machine": "4WLQHszrF9Z9NxLYiyEhzZfZvPF2zmMqH4Qm6xBRZZm7",
+      "offer": "EN8unzg6svmWGDnG4U6v3UMGReBmJktPaW4KjaAzHq6Q",
+      "worker": "A4w44VBEsMkazSvsids8q7VD5Q6u3bFRt5pBgSEFuWLV"
+    },
+    {
+      "provider": "3CXiFzoJJ7GDcGLChFUMQVV5dG6MWdRg5wC9rYU5iSTX",
+      "machine": "AhSrtvDgVGUoojX7yPpHSLpLW6zjGuhqNKr3vhn7sHzb",
+      "offer": "H9ttQV4zhSeoCasXAvQJ9yCWbKLKDJhc1z7FC2jtYGBM",
+      "worker": "7eCMLARk3TnEfQ5mAF5kiAUGYyLhTp43YJ4FifTQLBtf"
+    },
+    {
+      "provider": "2xJ2gKUk1Kv1stN6Tpej2CGdnpHU8XRNF8UXh2QdNCeJ",
+      "machine": "8qygHJqpgX6NRzZCyhGYfQc8Znv9NGWetb3HL4r4WNUJ",
+      "offer": "8FXek1E2kqa3LjsMzXXVjYr4cE2NtwfiNqwD6ZXrUTqe",
+      "worker": "iqdhpc6GbDtHFwXELvL1p6DLXhQV3qfv9LxDG1kXtyS"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Architecture
+
+Solana is the authoritative economic layer. InsForge provides PostgreSQL projections, user identity and private evidence. Fastify constructs unsigned transactions and verifies ownership proofs; Next.js renders market, intent, buyer, provider, network and documentation flows. A wallet must sign token operations.
+
+The protocol source is `programs/compute-market/src/lib.rs`; wire validation is in `packages/job-spec`, `packages/receipts`, and `packages/verification`. `apps/indexer` reconciles finalized accounts and maintains independent history cursors. `agents/provider-node` contains authority-separated worker operations and an execution journal. `executors/docker` uses NVIDIA Container Toolkit selection and OPA before creating containers. `apps/verifier` checks artifacts and submits its own signed decision. `packages/sdk` and `apps/gateway` provide programmatic access.
+
+The API uses InsForge's admin client only after route-specific authorization. Private reads require a valid InsForge session plus an Ed25519 wallet proof; a user cannot claim a wallet by writing a database row. Provider receipt uploads prove the assigned worker signature and finalized receipt hash. Storage is private with explicit RLS. Full flow diagrams and proposed future components are in BUILD_PLAN.md.
+
+Current boundaries: one Solana cluster per database, one active job per machine, classic SPL tokens, and a trusted configured verifier/resolver. Execution supports digest-pinned OCI batches, optional required gVisor isolation, fixed-duration vLLM service containers, and Ray Jobs API submissions. Arbitrary input materialization remains disabled. Challenge and redundant assurance are orchestrated through InsForge; TEE and proof adapters fail closed without their required evidence. Remaining external and governance gates are tracked in the specification coverage matrix.

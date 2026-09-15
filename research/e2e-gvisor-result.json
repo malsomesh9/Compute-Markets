@@ -1,0 +1,39 @@
+{
+  "network": "localnet",
+  "execution": "real Docker OCI (runsc), non-root, network-denied, read-only CPU workload",
+  "ociRuntime": "runsc",
+  "program": "HsjKrSHNqXgqkDmyp1PAhhFAa16GHfeRNZ9s6Zuqpfyd",
+  "job": "49EwT6zgqeAk5NFNRGXK7wCGKfEhcqe3ouoop9ox1Pwb",
+  "mint": "EWybiiUhW5dXWRSuENZpwy63ijmcVuJJCbmYqfTGH2Qs",
+  "settlementTx": "44rs8XBdP8xr7jZKWmF7uYkaMrcTCvAqZwD1V4LVuc8Xa5qTwgHHU1GLCdZMWqUYNa1RZFPm8ruPyT3JXt6ZuPXf",
+  "verificationTx": "3pzBGpYFjCKpduGNfeyJE1HmnkfPxeCMNvayiNk7Gep6ckgHkpvKSTv4L9PZWzNTP3o64beRX4H5LJjpvUktKLFE",
+  "accounting": {
+    "state": "COMPLETED",
+    "settled": true,
+    "deposit": 100000,
+    "provider_paid": 34300,
+    "fee_paid": 700,
+    "refunded": 65000
+  },
+  "verifiedAt": "2026-09-10T16:56:48.717Z",
+  "providers": [
+    {
+      "provider": "5HoriHZaCAPZDmsKMzzLAnRowmkRSnBg3ubSUPE7hGNc",
+      "machine": "2sVybYLTpg5PoDWUs4J5FhN7oUt9KxdaN391cJgLAD5U",
+      "offer": "9MaxFyi6g7pz26DZe3F45RVMcR2XUoTDf2kwAJPV37YR",
+      "worker": "A4w44VBEsMkazSvsids8q7VD5Q6u3bFRt5pBgSEFuWLV"
+    },
+    {
+      "provider": "3CXiFzoJJ7GDcGLChFUMQVV5dG6MWdRg5wC9rYU5iSTX",
+      "machine": "9vJa1ziYshV8PtPvyDgj6yjnQdBD96V48ZfreTgTUrUt",
+      "offer": "E7g24nZvTT4hwaLzp8oukuU74uCJ6rAcqhUi1JkJZedU",
+      "worker": "7eCMLARk3TnEfQ5mAF5kiAUGYyLhTp43YJ4FifTQLBtf"
+    },
+    {
+      "provider": "2xJ2gKUk1Kv1stN6Tpej2CGdnpHU8XRNF8UXh2QdNCeJ",
+      "machine": "Eu6TradeaLvrnNpyycZnKVsh1MPUFTEpFC1kUaPfrCCG",
+      "offer": "5p6n1kmWwczYd7FmJdw2mzmafCq3sGPuJ7CyZ6dS8pHX",
+      "worker": "iqdhpc6GbDtHFwXELvL1p6DLXhQV3qfv9LxDG1kXtyS"
+    }
+  ]
+}

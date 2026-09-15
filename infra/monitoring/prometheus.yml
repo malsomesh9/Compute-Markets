@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: vericompute-api
+    static_configs:
+      - targets: ['api:4000']
+  - job_name: nvidia-dcgm
+    static_configs:
+      - targets: ['gpu-worker:9400']

@@ -1,0 +1,26 @@
+{
+  "name": "@vericompute/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest",
+    "@insforge/sdk": "latest",
+    "@solana/web3.js": "latest",
+    "buffer": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest"
+  }
+}

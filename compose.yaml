@@ -1,0 +1,35 @@
+# InsForge remains the backend; no local Postgres replacement is started.
+services:
+  api:
+    build: .
+    env_file: .env.local
+    environment:
+      SOLANA_RPC_URL: http://host.docker.internal:8899
+      SOLANA_WS_URL: ws://host.docker.internal:8900
+      WEB_ORIGIN: http://localhost:3000
+    ports: ['127.0.0.1:4000:4000']
+    extra_hosts: ['host.docker.internal:host-gateway']
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+  indexer:
+    build: .
+    command: [node, --import, tsx, apps/indexer/src/main.ts]
+    env_file: .env.local
+    environment:
+      SOLANA_RPC_URL: http://host.docker.internal:8899
+    extra_hosts: ['host.docker.internal:host-gateway']
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+  valkey:
+    image: valkey/valkey:8.1-alpine
+    ports: ['127.0.0.1:6379:6379']
+    profiles: [cache]
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    volumes: ['./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro']
+    ports: ['127.0.0.1:9090:9090']
+    profiles: [monitoring]

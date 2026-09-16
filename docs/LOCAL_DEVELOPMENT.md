@@ -1,6 +1,6 @@
 # Local development
 
-InsForge is already provisioned and linked as `vericompute`, API `https://dyr25fzr.ap-southeast.insforge.app`. Keep `.env.local`, `.insforge/project.json`, and `keys/` private. The root server environment and `apps/web/.env.local` are populated locally; only anon credentials belong in the browser.
+InsForge is already provisioned and linked as `vericompute-backup`, API `https://vxq35sgz.ap-southeast.insforge.app`. Keep `.env.local`, `.insforge/project.json`, and `keys/` private. The root server environment and `apps/web/.env.local` are populated locally; only anon credentials belong in the browser.
 
 ```sh
 npm ci

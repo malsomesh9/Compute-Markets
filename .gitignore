@@ -19,3 +19,6 @@ research/__pycache__/
 
 __pycache__/
 *.pyc
+
+# Local InsForge project credentials
+.insforge/

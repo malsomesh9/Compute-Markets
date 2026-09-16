@@ -2,7 +2,9 @@
 
 ## Current deployment
 
-The live devnet application is deployed at https://dyr25fzr.insforge.site. Its Fastify service runs in InsForge Compute at https://vericompute-api-d538c2c8-0e47-44a3-bc01-d07ab8a2e8f4.fly.dev. InsForge also hosts the database, authentication and private evidence bucket.
+The live devnet application is deployed at https://vxq35sgz.insforge.site. Its Fastify service runs in InsForge Compute at https://vericompute-api-83d03433-e874-48a0-92b9-fa7602125977.fly.dev. InsForge also hosts the database, authentication and private evidence bucket.
+
+This deployment uses an InsForge free project as a recovery environment after the original organization reached its usage limit. The API scales to zero between requests to conserve the free compute allowance. Free projects can pause after a week of inactivity, so the deployment is suitable for a public demo and development validation rather than an uptime commitment.
 
 The service is configured with `SOLANA_NETWORK=devnet`, `RUN_INDEXER=true`, and `PUBLIC_READ_ONLY=false`. `/health` reports process liveness and `/ready` validates the devnet genesis hash and executable program account. The deployed protocol configuration uses official devnet USDC (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`), a 2% fee, and a one-hour dispute period. Empty inventory means that no independent provider currently has a fresh signed heartbeat.
 

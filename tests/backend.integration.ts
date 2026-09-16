@@ -58,12 +58,29 @@ if (receipt?.length) {
     .download(receipt[0]!.storage_key);
   assert.ok(error, "Evidence is private");
 }
-const { data: pub, error: publicError } = await anon.database
-  .from("providers")
-  .select("id")
-  .limit(5);
-assert.equal(publicError, null);
-assert.ok(pub?.length);
+const publicProbeId = `security-probe-${Date.now()}`;
+await checked(
+  admin.database.from("providers").insert([
+    {
+      id: publicProbeId,
+      authority: publicProbeId,
+      name: "RLS probe",
+      metadata_hash: "0".repeat(64),
+    },
+  ]),
+);
+try {
+  const { data: pub, error: publicError } = await anon.database
+    .from("providers")
+    .select("id")
+    .eq("id", publicProbeId);
+  assert.equal(publicError, null);
+  assert.deepEqual(pub?.map((row) => row.id), [publicProbeId]);
+} finally {
+  await checked(
+    admin.database.from("providers").delete().eq("id", publicProbeId),
+  );
+}
 for (const table of ["benchmark_reports", "market_price_history"]) {
   const { error } = await anon.database.from(table).select("id").limit(1);
   assert.equal(error, null, `${table} should be publicly readable`);
